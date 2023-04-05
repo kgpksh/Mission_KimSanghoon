@@ -1,7 +1,10 @@
 package com.ll.gramgram.standard.util;
 
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Ut {
     public static class url {
@@ -47,6 +50,27 @@ public class Ut {
             String urlAfter = url.substring(startPoint + endPoint + 1);
 
             return url.substring(0, startPoint) + urlAfter;
+        }
+    }
+
+    public static class IO {
+        public static List<List<String>> getOAuthUniqueCode() throws IOException {
+            BufferedReader reader = new BufferedReader(
+                    new FileReader("src/main/resources/UniqueCodes.txt")
+            );
+
+            List<List<String>> result = new ArrayList<>();
+
+            String str;
+            while ((str = reader.readLine()) != null) {
+                str = str.stripIndent().trim();
+                List<String> row = new ArrayList<>(Arrays.asList(str.split(",")));
+                result.add(row);
+            }
+
+            reader.close();
+
+            return result;
         }
     }
 }
