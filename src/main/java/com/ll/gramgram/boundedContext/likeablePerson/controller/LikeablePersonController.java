@@ -60,7 +60,7 @@ public class LikeablePersonController {
         return "usr/likeablePerson/list";
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteAttract(@PathVariable("id") Long id, Principal principal) {
         RsData<LikeablePerson> tmp = likeablePersonService.deleteFromAttracted(id, principal.getName());
 
