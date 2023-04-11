@@ -42,6 +42,18 @@ public class LikeablePersonService {
             return RsData.of("F-3", "%d 보다 많은 호감상대를 등록할 수 없습니다".formatted(LIKE_NUMBER_LIMIT));
         }
 
+//        SELECT한 리스트 재사용. 최대 길이 10인 리스트 순회하는 것이 DB 조회하는 것 보다 비용이 적다 판단.
+        for (LikeablePerson likeablePerson : likeablePeopleList) {
+            String likeTarget = likeablePerson.getToInstaMemberUsername();
+            int likeReason = likeablePerson.getAttractiveTypeCode();
+
+            if (likeTarget.equals(username)) {
+                if (likeReason == attractiveTypeCode) {
+                    return RsData.of("F-4", "이미 존재하는 사람에게 같은 이유로 호감을 표시할 수 없습니다.");
+                }
+            }
+        }
+
         InstaMember toInstaMember = instaMemberService.findByUsernameOrCreate(username).getData();
 
 
