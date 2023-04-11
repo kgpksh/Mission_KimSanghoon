@@ -6,11 +6,13 @@ import com.ll.gramgram.boundedContext.instaMember.service.InstaMemberService;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRepository;
 import com.ll.gramgram.boundedContext.member.entity.Member;
+import com.ll.gramgram.boundedContext.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +20,7 @@ import java.util.List;
 public class LikeablePersonService {
     private final LikeablePersonRepository likeablePersonRepository;
     private final InstaMemberService instaMemberService;
+    private final MemberService memberService;
 
     @Transactional
     public RsData<LikeablePerson> like(Member member, String username, int attractiveTypeCode) {
@@ -48,4 +51,25 @@ public class LikeablePersonService {
     public List<LikeablePerson> findByFromInstaMemberId(Long fromInstaMemberId) {
         return likeablePersonRepository.findByFromInstaMemberId(fromInstaMemberId);
     }
+
+    @Transactional(readOnly = false)
+    public RsData<LikeablePerson> deleteFromAttracted(Long id, String username) {
+        Optional<LikeablePerson> attraction = likeablePersonRepository.findById(id);
+
+        if (!attraction.isPresent()) {
+            return RsData.of("F-3", null, null);
+        }
+
+        System.out.println(memberService.getInstaId(username));
+
+        Long idid=attraction.get().getFromInstaMember().getId();
+        System.out.println(idid);
+        if (memberService.getInstaId(username) != idid) {
+            return RsData.of("F-4", null, null);
+        }
+
+        likeablePersonRepository.deleteById(id);
+        return RsData.of("S-2", "선택한 호감 상대 삭제 성공", null);
+    }
+
 }
