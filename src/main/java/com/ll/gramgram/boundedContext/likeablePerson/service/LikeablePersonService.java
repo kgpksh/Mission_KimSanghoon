@@ -51,6 +51,10 @@ public class LikeablePersonService {
                 if (likeReason == attractiveTypeCode) {
                     return RsData.of("F-4", "이미 존재하는 사람에게 같은 이유로 호감을 표시할 수 없습니다.");
                 }
+
+//                호감사유 업데이트
+                likeablePerson.setAttractiveTypeCode(attractiveTypeCode);
+                return RsData.of("S-2", "%s에 대한 호감사유를 외모에서 성격으로 변경합니다.".formatted(username));
             }
         }
 
