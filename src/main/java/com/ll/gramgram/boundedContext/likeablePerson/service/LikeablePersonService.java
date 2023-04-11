@@ -21,18 +21,29 @@ public class LikeablePersonService {
     private final LikeablePersonRepository likeablePersonRepository;
     private final InstaMemberService instaMemberService;
     private final MemberService memberService;
+    private static final int LIKE_NUMBER_LIMIT = 10;
 
     @Transactional
     public RsData<LikeablePerson> like(Member member, String username, int attractiveTypeCode) {
         if ( member.hasConnectedInstaMember() == false ) {
             return RsData.of("F-2", "먼저 본인의 인스타그램 아이디를 입력해야 합니다.");
         }
+//        호감 표시 행위자의 인스타 아이디
+        String actorName = member.getInstaMember().getUsername();
 
-        if (member.getInstaMember().getUsername().equals(username)) {
+        if (actorName.equals(username)) {
             return RsData.of("F-1", "본인을 호감상대로 등록할 수 없습니다.");
         }
 
+//        행위자가 호감 표시한 목록
+        List<LikeablePerson> likeablePeopleList = likeablePersonRepository.findByFromInstaMemberUsername(actorName);
+
+        if (likeablePeopleList.size() >= LIKE_NUMBER_LIMIT) {
+            return RsData.of("F-3", "%d 보다 많은 호감상대를 등록할 수 없습니다".formatted(LIKE_NUMBER_LIMIT));
+        }
+
         InstaMember toInstaMember = instaMemberService.findByUsernameOrCreate(username).getData();
+
 
         LikeablePerson likeablePerson = LikeablePerson
                 .builder()
