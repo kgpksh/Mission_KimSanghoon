@@ -8,6 +8,7 @@ import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRe
 import com.ll.gramgram.boundedContext.member.entity.Member;
 import com.ll.gramgram.boundedContext.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +22,8 @@ public class LikeablePersonService {
     private final LikeablePersonRepository likeablePersonRepository;
     private final InstaMemberService instaMemberService;
     private final MemberService memberService;
-    private static final int LIKE_NUMBER_LIMIT = 10;
+    @Value("${consistant.likeNumberLimit}")
+    private int likeNumberLimit;
 
     @Transactional
     public RsData<LikeablePerson> like(Member member, String username, int attractiveTypeCode) {
@@ -38,8 +40,8 @@ public class LikeablePersonService {
 //        행위자가 호감 표시한 목록
         List<LikeablePerson> likeablePeopleList = likeablePersonRepository.findByFromInstaMemberUsername(actorName);
 
-        if (likeablePeopleList.size() >= LIKE_NUMBER_LIMIT) {
-            return RsData.of("F-3", "%d 보다 많은 호감상대를 등록할 수 없습니다".formatted(LIKE_NUMBER_LIMIT));
+        if (likeablePeopleList.size() >= likeNumberLimit) {
+            return RsData.of("F-3", "%d 보다 많은 호감상대를 등록할 수 없습니다".formatted(likeNumberLimit));
         }
 
 //        SELECT한 리스트 재사용. 최대 길이 10인 리스트 순회하는 것이 DB 조회하는 것 보다 비용이 적다 판단.
