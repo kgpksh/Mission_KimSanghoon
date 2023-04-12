@@ -29,14 +29,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
+        String providerTypeCode = userRequest.getClientRegistration().getRegistrationId().toUpperCase();
         String oauthId = oAuth2User.getName();
 
-        String providerTypeCode = userRequest.getClientRegistration().getRegistrationId().toUpperCase();
+//        네이버 로그인일 경우 식별번호만 저장하기
+        if (providerTypeCode.equals("NAVER")) {
+            oauthId = oauthId.replace("{id=", "");
+            oauthId = oauthId.replace("}", "");
+        }
 
         String username = providerTypeCode + "__%s".formatted(oauthId);
 
-        Member member = memberService.whenSocialLogin(providerTypeCode, username).getData();
 
+        Member member = memberService.whenSocialLogin(providerTypeCode, username).getData();
         return new CustomOAuth2User(member.getUsername(), member.getPassword(), member.getGrantedAuthorities());
     }
 }
