@@ -3,6 +3,7 @@ package com.ll.gramgram.boundedContext.likeablePerson.service;
 
 import com.ll.gramgram.TestUt;
 import com.ll.gramgram.base.appConfig.AppConfig;
+import com.ll.gramgram.base.rsData.RsData;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRepository;
@@ -253,7 +254,7 @@ public class LikeablePersonServiceTests {
         // 호감표시를 생성하면 쿨타임이 지정되기 때문에, 그래서 바로 수정이 안된다.
         // 그래서 강제로 쿨타임이 지난것으로 만든다.
         // 테스트를 위해서 억지로 값을 넣는다.
-        TestUt.setFieldValue(likeablePersonToBts, "modifyUnlockDate", LocalDateTime.now().minusSeconds(-1));
+        TestUt.setFieldValue(likeablePersonToBts, "modifyUnlockDate", LocalDateTime.now().minusSeconds(1));
 
         // 수정을 하면 쿨타임이 갱신된다.
         likeablePersonService.modifyAttractive(memberUser3, likeablePersonToBts, 1);
@@ -262,5 +263,27 @@ public class LikeablePersonServiceTests {
         assertThat(
                 likeablePersonToBts.getModifyUnlockDate().isAfter(coolTime)
         ).isTrue();
+    }
+
+    @Test
+    @DisplayName("3시간 이내에 호감 변동 불가")
+    void t009() {
+        Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
+        // 호감표시를 생성한다.
+        LikeablePerson likeablePersonToBts = likeablePersonService.like(memberUser3, "bts", 3).getData();
+
+        RsData failCancel = likeablePersonService.canCancel(memberUser3, likeablePersonToBts);
+        RsData failModify = likeablePersonService.canModifyLike(memberUser3, likeablePersonToBts);
+        assertThat(failCancel.getResultCode()).isEqualTo("F-3");
+        assertThat(failModify.getResultCode()).isEqualTo("F-3");
+
+        LocalDateTime coolTime = AppConfig.genLikeablePersonModifyUnlockDate();
+        TestUt.setFieldValue(likeablePersonToBts, "modifyUnlockDate"
+                , likeablePersonToBts.getModifyUnlockDate().minusHours(3L));
+
+        RsData successCancel = likeablePersonService.canCancel(memberUser3, likeablePersonToBts);
+        RsData successModify = likeablePersonService.canModifyLike(memberUser3, likeablePersonToBts);
+        assertThat(successCancel.getResultCode()).isEqualTo("S-1");
+        assertThat(successModify.getResultCode()).isEqualTo("S-1");
     }
 }

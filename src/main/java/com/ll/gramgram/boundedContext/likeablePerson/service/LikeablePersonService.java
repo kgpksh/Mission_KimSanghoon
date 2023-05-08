@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -96,10 +97,16 @@ public class LikeablePersonService {
         if (actorInstaMemberId != fromInstaMemberId)
             return RsData.of("F-2", "권한이 없습니다.");
 
+        if (likeablePerson.getModifyUnlockDate().isAfter(LocalDateTime.now())) {
+            return RsData.of("F-3", "해당 호감표시/사유 변경 후 %d시간이 지나지 않았습니다"
+                    .formatted(AppConfig.getLikeablePersonModifyCoolTime() / 3600));
+        }
+
         return RsData.of("S-1", "삭제가능합니다.");
     }
 
     private RsData canLike(Member actor, String username, int attractiveTypeCode) {
+
         if (!actor.hasConnectedInstaMember()) {
             return RsData.of("F-1", "먼저 본인의 인스타그램 아이디를 입력해주세요.");
         }
@@ -207,6 +214,11 @@ public class LikeablePersonService {
 
         if (!Objects.equals(likeablePerson.getFromInstaMember().getId(), fromInstaMember.getId())) {
             return RsData.of("F-2", "해당 호감표시를 취소할 권한이 없습니다.");
+        }
+
+        if (likeablePerson.getModifyUnlockDate().isAfter(LocalDateTime.now())) {
+            return RsData.of("F-3", "해당 호감표시/사유 변경 후 %d시간이 지나지 않았습니다"
+                    .formatted(AppConfig.getLikeablePersonModifyCoolTime() / 3600));
         }
 
 
