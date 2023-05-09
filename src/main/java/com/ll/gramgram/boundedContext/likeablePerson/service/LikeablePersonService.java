@@ -219,4 +219,15 @@ public class LikeablePersonService {
 
         return RsData.of("S-1", "호감사유변경이 가능합니다.");
     }
+
+    public List<LikeablePerson> filterLikes(InstaMember instaMember, String byGender, int byReason) {
+        List<LikeablePerson> quried = instaMember.getToLikeablePeople();
+
+        return quried.stream()
+//                성별 필터. M과 W로 구분. ""로 빈 문자열이면 contains에서 무조건 true
+                .filter(list -> list.getFromInstaMember().getGender().contains(byGender))
+//                호감사유 필터.
+                .filter(list -> list.getAttractiveTypeCode() == byReason || byReason == 0)
+                .toList();
+    }
 }

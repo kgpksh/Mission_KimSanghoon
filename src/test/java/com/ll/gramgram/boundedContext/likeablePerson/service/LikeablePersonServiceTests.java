@@ -4,6 +4,7 @@ package com.ll.gramgram.boundedContext.likeablePerson.service;
 import com.ll.gramgram.TestUt;
 import com.ll.gramgram.base.appConfig.AppConfig;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
+import com.ll.gramgram.boundedContext.instaMember.service.InstaMemberService;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRepository;
 import com.ll.gramgram.boundedContext.member.entity.Member;
@@ -33,6 +34,8 @@ public class LikeablePersonServiceTests {
     private LikeablePersonService likeablePersonService;
     @Autowired
     private LikeablePersonRepository likeablePersonRepository;
+    @Autowired
+    private InstaMemberService instaMemberService;
 
     @Test
     @DisplayName("테스트 1")
@@ -262,5 +265,16 @@ public class LikeablePersonServiceTests {
         assertThat(
                 likeablePersonToBts.getModifyUnlockDate().isAfter(coolTime)
         ).isTrue();
+    }
+
+    @Test
+    @DisplayName("받은 호감리스트 성별/사유로 필터링")
+    void t009() throws Exception {
+        InstaMember instaMember = instaMemberService.findByUsername("insta_user4").get();
+        assertThat(likeablePersonService.filterLikes(instaMember, "M", 1).size()).isEqualTo(1);
+        assertThat(likeablePersonService.filterLikes(instaMember, "", 2).size()).isEqualTo(2);
+        assertThat(likeablePersonService.filterLikes(instaMember, "W", 1).size()).isEqualTo(0);
+        assertThat(likeablePersonService.filterLikes(instaMember, "W", 2).size()).isEqualTo(1);
+        assertThat(likeablePersonService.filterLikes(instaMember, "M", 2).size()).isEqualTo(1);
     }
 }
