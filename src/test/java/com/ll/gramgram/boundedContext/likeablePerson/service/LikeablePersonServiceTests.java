@@ -4,9 +4,10 @@ package com.ll.gramgram.boundedContext.likeablePerson.service;
 import com.ll.gramgram.TestUt;
 import com.ll.gramgram.base.appConfig.AppConfig;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
-import com.ll.gramgram.boundedContext.instaMember.service.InstaMemberService;
+import com.ll.gramgram.boundedContext.instaMember.repository.InstaMemberRepository;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRepository;
+import com.ll.gramgram.boundedContext.likeablePerson.service.givenLikeSortComparators.*;
 import com.ll.gramgram.boundedContext.member.entity.Member;
 import com.ll.gramgram.boundedContext.member.service.MemberService;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,8 +37,10 @@ public class LikeablePersonServiceTests {
     @Autowired
     private LikeablePersonRepository likeablePersonRepository;
     @Autowired
-    private InstaMemberService instaMemberService;
+    private InstaMemberRepository instaMemberService;
 
+    private InstaMember instaMember;
+    private List<LikeablePerson> likeablePeople;
     @Test
     @DisplayName("테스트 1")
     void t001() throws Exception {
@@ -267,14 +271,72 @@ public class LikeablePersonServiceTests {
         ).isTrue();
     }
 
+    private void filterAndSortInit() {
+        instaMember = instaMemberService.findByUsername("insta_user9").get();
+        likeablePeople = likeablePersonService.filterLikes(instaMember, "", 0);
+    }
     @Test
     @DisplayName("받은 호감리스트 성별/사유로 필터링")
     void t009() throws Exception {
-        InstaMember instaMember = instaMemberService.findByUsername("insta_user4").get();
+        filterAndSortInit();
         assertThat(likeablePersonService.filterLikes(instaMember, "M", 1).size()).isEqualTo(1);
-        assertThat(likeablePersonService.filterLikes(instaMember, "", 2).size()).isEqualTo(2);
+        assertThat(likeablePersonService.filterLikes(instaMember, "", 2).size()).isEqualTo(1);
         assertThat(likeablePersonService.filterLikes(instaMember, "W", 1).size()).isEqualTo(0);
         assertThat(likeablePersonService.filterLikes(instaMember, "W", 2).size()).isEqualTo(1);
-        assertThat(likeablePersonService.filterLikes(instaMember, "M", 2).size()).isEqualTo(1);
+        assertThat(likeablePersonService.filterLikes(instaMember, "M", 2).size()).isEqualTo(0);
+        assertThat(likeablePersonService.filterLikes(instaMember, "W", 3).size()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("날짜순 정렬")
+    void t010() throws Exception {
+        filterAndSortInit();
+
+//        날짜 오름차순
+        assertThat(likeablePeople.stream()
+                .sorted(new DateAsc()).map(likeablePerson -> likeablePerson.getId()).toList())
+                .isEqualTo(Arrays.asList(4L, 5L, 6L));
+
+//        날짜 내림차순
+        assertThat(likeablePeople.stream()
+                .sorted(new DateDesc()).map(likeablePerson -> likeablePerson.getId()).toList())
+                .isEqualTo(Arrays.asList(6L, 5L, 4L));
+    }
+
+    @Test
+    @DisplayName("인기순 정렬")
+    void t011() {
+        filterAndSortInit();
+
+//        인기 오름차순
+        assertThat(likeablePeople.stream()
+                .sorted(new PopularAsc(likeablePersonService)).map(likeablePerson -> likeablePerson.getId()).toList())
+                .isEqualTo(Arrays.asList(4L, 6L, 5L));
+
+//        인기 내림차순
+        assertThat(likeablePeople.stream()
+                .sorted(new PopularDesc(likeablePersonService)).map(likeablePerson -> likeablePerson.getId()).toList())
+                .isEqualTo(Arrays.asList(5L, 6L, 4L));
+    }
+
+    @Test
+    @DisplayName("성별 오름차순 정렬")
+    void t012() {
+        filterAndSortInit();
+
+        assertThat(likeablePeople.stream()
+                .sorted(new GenderAsc()).map(likeablePerson -> likeablePerson.getFromInstaMember().getGender()).toList())
+                .isEqualTo(Arrays.asList("M", "M", "W"));
+    }
+
+    @Test
+    @DisplayName("호감사유 오름차순 정렬")
+    void t013() {
+        filterAndSortInit();
+
+//        호감 코드번호가 아닌 한글 사전순 정렬
+        assertThat(likeablePeople.stream()
+                .sorted(new ReasonAsc()).map(likeablePerson -> likeablePerson.getId()).toList())
+                .isEqualTo(Arrays.asList(5L, 6L, 4L));
     }
 }

@@ -9,15 +9,14 @@ import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
 import com.ll.gramgram.boundedContext.instaMember.service.InstaMemberService;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRepository;
+import com.ll.gramgram.boundedContext.likeablePerson.service.givenLikeSortComparators.*;
 import com.ll.gramgram.boundedContext.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +25,15 @@ public class LikeablePersonService {
     private final LikeablePersonRepository likeablePersonRepository;
     private final InstaMemberService instaMemberService;
     private final ApplicationEventPublisher publisher;
+
+    private final List<Comparator<LikeablePerson>> sortBy = Arrays.asList(
+            new DateDesc()
+            , new DateAsc()
+            , new PopularDesc(this)
+            , new PopularAsc(this)
+            , new GenderAsc()
+            , new ReasonAsc()
+    );
 
     @Transactional
     public RsData<LikeablePerson> like(Member actor, String username, int attractiveTypeCode) {
@@ -229,5 +237,13 @@ public class LikeablePersonService {
 //                호감사유 필터.
                 .filter(list -> list.getAttractiveTypeCode() == byReason || byReason == 0)
                 .toList();
+    }
+
+    public List<LikeablePerson> sortedLikes(List<LikeablePerson> likeablePeople, int sortCode) {
+        return likeablePeople.stream().sorted(sortBy.get(sortCode)).toList();
+    }
+
+    public long countPopularity(InstaMember instaMember) {
+        return likeablePersonRepository.countByToInstaMember(instaMember).get();
     }
 }

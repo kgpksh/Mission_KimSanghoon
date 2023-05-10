@@ -5,7 +5,6 @@ import com.ll.gramgram.base.rsData.RsData;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.service.LikeablePersonService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -126,14 +125,14 @@ public class LikeablePersonController {
     public String showToList(Model model
                             , @RequestParam(value = "gender", defaultValue = "") String gender
                             , @RequestParam(value = "attractiveTypeCode", defaultValue = "0") int attractiveTypeCode
-                            , @RequestParam(value = "sortCode", defaultValue = "1") int sortCode) {
+                            , @RequestParam(value = "sortCode", defaultValue = "0") int sortCode) {
         InstaMember instaMember = rq.getMember().getInstaMember();
         // 인스타인증을 했는지 체크
         if (instaMember != null) {
             // 해당 인스타회원이 좋아하는 사람들 목록
-            List<LikeablePerson> likeablePeople = likeablePersonService.filterLikes(instaMember, gender, attractiveTypeCode);
-            System.out.println(likeablePeople);
-            model.addAttribute("likeablePeople", likeablePeople);
+            List<LikeablePerson> filteredLikes = likeablePersonService.filterLikes(instaMember, gender, attractiveTypeCode);
+            List<LikeablePerson> sorted = likeablePersonService.sortedLikes(filteredLikes, sortCode);
+            model.addAttribute("likeablePeople", sorted);
         }
 
         return "usr/likeablePerson/toList";
